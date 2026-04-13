@@ -20,7 +20,7 @@ jobs:
           version: latest
 
       - name: Print version
-        run: jacoco-cli --version
+        run: jacoco-cli version
 
       - name: Print help
         run: jacoco-cli --help
