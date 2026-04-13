@@ -22,5 +22,5 @@ jobs:
       - name: Print version
         run: jacoco-cli version
 
-      - name: Parse example exec file
-        run: jacoco-cli report test/example.exec
+      - name: Verify report command
+        run: jacoco-cli report test/example.exec --classfiles test
