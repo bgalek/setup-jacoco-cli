@@ -1,0 +1,29 @@
+name: Self-test
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  ci:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: ./
+        with:
+          version: latest
+
+      - name: Print version
+        run: jacoco-cli --version
+
+      - name: Print help
+        run: jacoco-cli --help
+
+      - name: Parse example exec file
+        run: jacoco-cli report test/example.exec
