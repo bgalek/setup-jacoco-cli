@@ -1,0 +1,73 @@
+name: 'setup-jacoco-cli'
+description: 'Download and set up jacoco-cli for use in GitHub Actions workflows'
+author: 'bgalek'
+
+branding:
+  icon: 'check-circle'
+  color: 'green'
+
+inputs:
+  version:
+    description: 'Version of jacoco-cli to install (e.g. "1.0.0"). Defaults to latest release.'
+    required: false
+    default: 'latest'
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Determine platform
+      id: platform
+      shell: bash
+      run: |
+        case "$RUNNER_OS" in
+          Linux)  OS="linux" ;;
+          macOS)  OS="macos" ;;
+          Windows) OS="windows" ;;
+          *) echo "::error::Unsupported OS: $RUNNER_OS"; exit 1 ;;
+        esac
+
+        case "$RUNNER_ARCH" in
+          X64)   ARCH="x86_64" ;;
+          ARM64) ARCH="aarch64" ;;
+          *) echo "::error::Unsupported architecture: $RUNNER_ARCH"; exit 1 ;;
+        esac
+
+        ARTIFACT="jacoco-cli-${OS}-${ARCH}"
+        if [ "$OS" = "windows" ]; then
+          ARTIFACT="${ARTIFACT}.exe"
+        fi
+
+        echo "artifact=$ARTIFACT" >> "$GITHUB_OUTPUT"
+
+    - name: Resolve version
+      id: version
+      shell: bash
+      env:
+        GH_TOKEN: ${{ github.token }}
+        INPUT_VERSION: ${{ inputs.version }}
+      run: |
+        if [ "$INPUT_VERSION" = "latest" ]; then
+          VERSION=$(gh release view --repo bgalek/jacoco-cli --json tagName --jq '.tagName')
+        else
+          VERSION="$INPUT_VERSION"
+        fi
+        echo "tag=$VERSION" >> "$GITHUB_OUTPUT"
+
+    - name: Download jacoco-cli
+      shell: bash
+      env:
+        GH_TOKEN: ${{ github.token }}
+      run: |
+        INSTALL_DIR="${RUNNER_TEMP}/jacoco-cli"
+        mkdir -p "$INSTALL_DIR"
+        gh release download "${{ steps.version.outputs.tag }}" \
+          --repo bgalek/jacoco-cli \
+          --pattern "${{ steps.platform.outputs.artifact }}" \
+          --dir "$INSTALL_DIR"
+        if [ "$RUNNER_OS" != "Windows" ]; then
+          chmod +x "$INSTALL_DIR/${{ steps.platform.outputs.artifact }}"
+          mv "$INSTALL_DIR/${{ steps.platform.outputs.artifact }}" "$INSTALL_DIR/jacoco-cli"
+        else
+          mv "$INSTALL_DIR/${{ steps.platform.outputs.artifact }}" "$INSTALL_DIR/jacoco-cli.exe"
+        fi
+        echo "$INSTALL_DIR" >> "$GITHUB_PATH"

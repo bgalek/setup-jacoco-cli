@@ -1,0 +1,28 @@
+name: Update major version tag
+
+on:
+  release:
+    types: [created]
+
+permissions:
+  contents: write
+
+jobs:
+  update-major-tag:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Extract major version
+        id: version
+        run: |
+          TAG="${GITHUB_REF_NAME}"
+          MAJOR="${TAG%%.*}"
+          echo "major=${MAJOR}" >> "$GITHUB_OUTPUT"
+
+      - name: Update major version tag
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git tag -fa "${{ steps.version.outputs.major }}" -m "Update ${{ steps.version.outputs.major }} to ${{ github.ref_name }}"
+          git push origin "${{ steps.version.outputs.major }}" --force
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
