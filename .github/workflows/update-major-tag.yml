@@ -32,5 +32,3 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git tag -fa "${{ steps.version.outputs.major }}" -m "Update ${{ steps.version.outputs.major }} to ${{ github.ref_name }}"
           git push origin HEAD -f --tags
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
